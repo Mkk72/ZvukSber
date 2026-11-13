@@ -146,6 +146,27 @@ export class PlayerPresenter {
     return items;
   }
 
+  /** Перемотка по доле 0..1 от длительности. */
+  async seekRatio(ratio: number): Promise<void> {
+    const duration = this.state.duration;
+    if (!Number.isFinite(duration) || duration <= 0) return;
+    const seconds = Math.max(0, Math.min(1, ratio)) * duration;
+    await this.bridge.seek(seconds);
+    await new Promise((resolve) => setTimeout(resolve, 400));
+    await this.poll();
+  }
+
+  async setVolume(value: number): Promise<void> {
+    await this.bridge.setVolume(Math.max(0, Math.min(1, value)));
+    await this.poll();
+  }
+
+  async toggleHifi(): Promise<void> {
+    await this.bridge.click('hifi');
+    await new Promise((resolve) => setTimeout(resolve, 500));
+    await this.poll();
+  }
+
   /** Запустить поток: главная → карточка потока → «Запустить поток». */
   async startFlow(title: string): Promise<void> {
     await this.shell.goHome();

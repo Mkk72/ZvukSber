@@ -30,6 +30,11 @@
 
       <div class="time"><span id="pos">0:00</span><span class="slash">/</span><span id="dur">0:00</span></div>
 
+      <div class="extras">
+        <input class="volume" id="volume" type="range" min="0" max="100" step="1" value="100" title="Громкость" aria-label="Громкость" />
+        <button class="btn hifi" id="hifi" data-cmd="hifi" title="HiFi (высокое качество)" aria-label="HiFi">HiFi</button>
+      </div>
+
       <div class="secondary">
         <button class="btn small" data-cmd="shuffle" title="Перемешать" aria-label="Перемешать">&#8644;</button>
         <button class="btn small" data-cmd="repeat" title="Повтор" aria-label="Повтор">&#8635;</button>
@@ -37,7 +42,7 @@
         <span class="hint">ZvukSber</span>
       </div>
 
-      <div class="progress" id="progress"><div class="fill" id="fill"></div></div>
+      <div class="progress" id="progress" title="Перемотка"><div class="fill" id="fill"></div></div>
     </div>
 
     <script src="bar.js"></script>

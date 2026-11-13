@@ -213,16 +213,58 @@ body {
   left: 0;
   right: 0;
   bottom: 0;
-  height: 2px;
+  height: 5px;
+  padding-top: 3px;
   background: #23252b;
+  background-clip: content-box;
   -webkit-app-region: no-drag;
+  cursor: pointer;
+}
+
+.progress:hover .fill {
+  background: #3ef07f;
 }
 
 .progress .fill {
-  height: 100%;
+  height: 2px;
   width: 0;
   background: #1ed760;
   transition: width 0.2s linear;
+}
+
+.extras {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  -webkit-app-region: no-drag;
+}
+
+.volume {
+  width: 52px;
+  height: 14px;
+  accent-color: #1ed760;
+  cursor: pointer;
+}
+
+.btn.hifi {
+  width: auto;
+  padding: 0 5px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: #6d737d;
+  border: 1px solid #2a2e36;
+  border-radius: 3px;
+}
+
+.btn.hifi.active {
+  color: #0d0f12;
+  background: #1ed760;
+  border-color: #1ed760;
+}
+
+body.wide .volume {
+  width: 90px;
 }
 
 /* Широкая плашка ~420×110: две строки. */

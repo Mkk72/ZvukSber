@@ -42,6 +42,10 @@ export interface RawSnapshot {
   playbackState?: PlaybackStatus | null;
   positionState?: RawPositionState | null;
   controls?: RawControl[];
+  /** Громкость элемента воспроизведения, 0..1. */
+  volume?: number | null;
+  /** Включён ли HiFi-режим на сайте. */
+  hifi?: boolean;
   errors?: string[];
 }
 
@@ -65,6 +69,10 @@ export interface PlayerState {
   canPrev: boolean;
   /** Есть ли валидный трек — от этого зависит, показывать ли плашку вообще. */
   hasTrack: boolean;
+  /** Громкость 0..1 для ползунка. */
+  volume: number;
+  /** Включён HiFi. */
+  hifi: boolean;
 }
 
 export const EMPTY_STATE: PlayerState = {
@@ -77,5 +85,7 @@ export const EMPTY_STATE: PlayerState = {
   canPause: false,
   canNext: false,
   canPrev: false,
-  hasTrack: false
+  hasTrack: false,
+  volume: 1,
+  hifi: false
 };

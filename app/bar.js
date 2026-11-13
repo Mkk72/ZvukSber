@@ -45,6 +45,11 @@
     nodes.pos.textContent = view.posText || '0:00';
     nodes.dur.textContent = view.durText || '0:00';
     nodes.fill.style.width = (view.progressPct || 0) + '%';
+
+    var volume = el('volume');
+    if (volume && !volume.matches(':active')) volume.value = String(view.volumePct == null ? 100 : view.volumePct);
+    var hifi = el('hifi');
+    if (hifi) hifi.classList.toggle('active', !!view.hifi);
   }
 
   function renderMenu(items) {
@@ -90,6 +95,38 @@
   if (menuButton) {
     menuButton.addEventListener('click', function () {
       api.menu();
+    });
+  }
+
+  // Перемотка: клик и протяжка по линии прогресса.
+  var progress = el('progress');
+  var scrubbing = false;
+  function seekTo(event) {
+    var rect = progress.getBoundingClientRect();
+    if (!rect.width) return;
+    var ratio = Math.max(0, Math.min(1, (event.clientX - rect.left) / rect.width));
+    api.command('seek:' + ratio.toFixed(4));
+  }
+  progress.addEventListener('mousedown', function (event) {
+    scrubbing = true;
+    seekTo(event);
+  });
+  window.addEventListener('mousemove', function (event) {
+    if (!scrubbing) return;
+    var rect = progress.getBoundingClientRect();
+    var ratio = Math.max(0, Math.min(1, (event.clientX - rect.left) / rect.width));
+    nodes.fill.style.width = (ratio * 100).toFixed(1) + '%';
+  });
+  window.addEventListener('mouseup', function (event) {
+    if (!scrubbing) return;
+    scrubbing = false;
+    seekTo(event);
+  });
+
+  var volume = el('volume');
+  if (volume) {
+    volume.addEventListener('input', function () {
+      api.command('volume:' + volume.value);
     });
   }
 

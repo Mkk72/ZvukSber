@@ -3,7 +3,7 @@ import { MEDIA_BRIDGE_SOURCE } from './injection';
 import type { RawSnapshot } from '../core/types';
 import type { MediaAction } from '../core/playerState';
 
-export type DomAction = 'play' | 'pause' | 'like' | 'dislike' | 'shuffle' | 'repeat' | 'queue' | 'next' | 'prev';
+export type DomAction = 'play' | 'pause' | 'like' | 'dislike' | 'shuffle' | 'repeat' | 'queue' | 'next' | 'prev' | 'hifi';
 
 function withTimeout<T>(p: Promise<T>, ms: number, label: string): Promise<T> {
   let timer: NodeJS.Timeout | undefined;
@@ -26,7 +26,8 @@ const DOM_PATTERNS: Record<DomAction, string> = {
   repeat: 'повтор|repeat',
   queue: 'очеред|queue',
   next: 'следующ|next',
-  prev: 'предыдущ|prev'
+  prev: 'предыдущ|prev',
+  hifi: 'hifi|hi-fi|качество'
 };
 
 /**
@@ -93,6 +94,7 @@ function domClickScript(action: DomAction): string {
     else if (action === 'shuffle') { target = secondary[0]; how = 'secondary[0]'; }
     else if (action === 'repeat') { target = secondary[1]; how = 'secondary[1]'; }
     else if (action === 'queue') { target = secondary[2]; how = 'secondary[2]'; }
+    else if (action === 'hifi') { target = byCls(/HifiButton|hiFiButton/i); how = 'hifi'; }
     if (!target) return { clicked: false, reason: 'no-target', transport: transport.length, secondary: secondary.length };
     target.click();
     return { clicked: true, how, cls: cls(target).slice(0, 60), buttons: btns.length };
@@ -165,6 +167,30 @@ export class SiteBridge {
         true
       )) as string;
       return res;
+    } catch (e) {
+      return 'error: ' + String(e);
+    }
+  }
+
+  /** Перемотка: через seekto-обработчик сайта, иначе напрямую элементу. */
+  async seek(seconds: number): Promise<string> {
+    try {
+      return (await this.wc.executeJavaScript(
+        `window.__zs && window.__zs.seek ? window.__zs.seek(${Number(seconds)}) : 'nobridge'`,
+        true
+      )) as string;
+    } catch (e) {
+      return 'error: ' + String(e);
+    }
+  }
+
+  /** Громкость: пишем в элемент воспроизведения, который поймал хук play(). */
+  async setVolume(value: number): Promise<string> {
+    try {
+      return (await this.wc.executeJavaScript(
+        `window.__zs && window.__zs.setVolume ? window.__zs.setVolume(${Number(value)}) : 'nobridge'`,
+        true
+      )) as string;
     } catch (e) {
       return 'error: ' + String(e);
     }

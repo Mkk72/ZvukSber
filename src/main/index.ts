@@ -395,6 +395,18 @@ async function bootstrap(): Promise<void> {
   );
 
   ipcMain.on('bar:command', (_event, command: string) => {
+    if (command.startsWith('seek:')) {
+      void presenter?.seekRatio(Number(command.slice(5)));
+      return;
+    }
+    if (command.startsWith('volume:')) {
+      void presenter?.setVolume(Number(command.slice(7)) / 100);
+      return;
+    }
+    if (command === 'hifi') {
+      void presenter?.toggleHifi();
+      return;
+    }
     void presenter?.run(command as PlayerCommand);
   });
   ipcMain.on('bar:menu', () => {

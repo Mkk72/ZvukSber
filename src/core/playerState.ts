@@ -64,7 +64,9 @@ export function stateFromSnapshot(raw: RawSnapshot | null, now: number = Date.no
       canPause: false,
       canNext: false,
       canPrev: false,
-      hasTrack: false
+      hasTrack: false,
+      volume: 1,
+      hifi: false
     };
   }
 
@@ -87,6 +89,13 @@ export function stateFromSnapshot(raw: RawSnapshot | null, now: number = Date.no
     canPause: handlers.has('pause') || status === 'playing',
     canNext: handlers.has('nexttrack'),
     canPrev: handlers.has('previoustrack'),
-    hasTrack: status !== 'none' || !!title
+    hasTrack: status !== 'none' || !!title,
+    volume:
+      typeof raw.volume === 'number'
+        ? Math.max(0, Math.min(1, raw.volume))
+        : media && Number.isFinite(media.volume)
+          ? media.volume
+          : 1,
+    hifi: !!raw.hifi
   };
 }

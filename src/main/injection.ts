@@ -79,6 +79,35 @@ export const MEDIA_BRIDGE_SOURCE = String.raw`(() => {
       st.errors.push('position hook: ' + e);
     }
 
+    st.seek = function (seconds) {
+      var h = st.handlers['seekto'];
+      try {
+        if (typeof h === 'function') {
+          h({ action: 'seekto', seekTime: seconds });
+          return 'ok';
+        }
+        var el0 = (st.mediaEls || [])[0];
+        if (el0) {
+          el0.currentTime = seconds;
+          return 'ok-media';
+        }
+      } catch (e) {
+        return 'throw:' + e;
+      }
+      return 'nohandler';
+    };
+
+    st.setVolume = function (value) {
+      var el1 = (st.mediaEls || [])[0];
+      if (!el1) return 'nomedia';
+      try {
+        el1.volume = Math.max(0, Math.min(1, value));
+        return 'ok';
+      } catch (e) {
+        return 'throw:' + e;
+      }
+    };
+
     st.snapshot = function () {
       var ms = navigator.mediaSession;
       var m = ms && ms.metadata;
@@ -129,6 +158,17 @@ export const MEDIA_BRIDGE_SOURCE = String.raw`(() => {
           };
         }),
         playbackState: ms ? ms.playbackState : null,
+        volume: (function () {
+          var el2 = (st.mediaEls || [])[0];
+          return el2 && typeof el2.volume === 'number' ? el2.volume : null;
+        })(),
+        hifi: (function () {
+          var btn = document.querySelector('[class*="HifiButton"], [class*="hiFiButton"]');
+          if (!btn) return false;
+          var pressed = btn.getAttribute('aria-pressed');
+          if (pressed === 'true') return true;
+          return /active|enabled|on/i.test(String(btn.className) + ' ' + String(btn.getAttribute('aria-checked')));
+        })(),
         errors: st.errors
       };
     };

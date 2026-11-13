@@ -19,6 +19,9 @@ export interface BarViewModel {
   canNext: boolean;
   canPrev: boolean;
   liked: boolean;
+  /** 0..100 для ползунка громкости. */
+  volumePct: number;
+  hifi: boolean;
 }
 
 export function toBarViewModel(state: PlayerState): BarViewModel {
@@ -38,6 +41,8 @@ export function toBarViewModel(state: PlayerState): BarViewModel {
     // нет, презентер кликнет по кнопке сайта.
     canNext: state.hasTrack,
     canPrev: state.hasTrack,
-    liked: false
+    liked: false,
+    volumePct: Math.round((state.volume ?? 1) * 100),
+    hifi: state.hifi
   };
 }
