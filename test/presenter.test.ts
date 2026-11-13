@@ -108,6 +108,18 @@ describe('PlayerPresenter', () => {
     expect(h.menus.at(-1)?.[0].label).toContain('Larmes — L2Haine');
   });
 
+  it('позиция обновляется каждый опрос, даже когда трек не менялся', async () => {
+    const raw = snapshot();
+    const h = makeHarness(raw);
+    raw.media[0].currentTime = 4;
+    await h.presenter.poll();
+    raw.media[0].currentTime = 9;
+    await h.presenter.poll();
+    expect(h.views).toHaveLength(2);
+    expect(h.views[0].posText).toBe('0:04');
+    expect(h.views[1].posText).toBe('0:09');
+  });
+
   it('toggle при воспроизведении шлёт pause', async () => {
     const h = makeHarness();
     await h.presenter.poll();

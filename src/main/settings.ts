@@ -34,7 +34,7 @@ export const DEFAULT_SETTINGS: Settings = {
   mediaKeys: true,
   startHidden: false,
   autostart: false,
-  startFlowOnLaunch: true,
+  startFlowOnLaunch: false,
   defaultFlow: 'Мой поток'
 };
 

@@ -86,32 +86,31 @@ export class PlayerPresenter {
 
   /** Один цикл опроса. Публичный, чтобы можно было дёрнуть из теста/диагностики. */
   async poll(): Promise<PlayerState> {
-    // Антибот-заглушка Звука: страница hcheck/xpvnsulc без плеера. Показываем
-    // честный текст вместо «ничего не играет» и пробуем вернуться сами, но редко.
+    // Антибот-заглушка Звука: страница hcheck/xpvnsulc без плеера. Не перезагружаем
+    // её сами — проверка должна пройти в окне сайта, а наши повторы только мешают.
     if (/hcheck|xpvnsulc/.test(this.shell.currentUrl())) {
       const idle = toBarViewModel(EMPTY_STATE);
       this.bar.setState({
         ...idle,
         title: 'Звук',
-        artist: 'проверка сайта — подождите',
+        artist: 'проверка сайта — пройдите в окне',
         canToggle: false,
         canNext: false,
         canPrev: false
       });
-      this.scheduleUnblockRetry();
       return EMPTY_STATE;
     }
     const raw = await this.bridge.snapshot();
     const next = stateFromSnapshot(raw);
     const sig = signature(next);
+    // Позицию и прогресс показываем каждый опрос: иначе время в плашке
+    // замирает между сменами трека (в signature его нет).
+    this.state = next;
+    this.bar.setState(toBarViewModel(next));
     if (sig !== this.lastSignature) {
       this.lastSignature = sig;
-      this.state = next;
-      this.bar.setState(toBarViewModel(next));
       this.tray.setTooltip(nowPlayingText(next.track?.title ?? '', next.track?.artist ?? ''));
       this.renderTrayMenu();
-    } else {
-      this.state = next;
     }
     return next;
   }
@@ -141,19 +140,6 @@ export class PlayerPresenter {
     if (first.clicked) return;
     await new Promise((resolve) => setTimeout(resolve, 400));
     await this.bridge.click(action);
-  }
-
-  private unblockTimer: NodeJS.Timeout | null = null;
-  private unblockAttempts = 0;
-
-  private scheduleUnblockRetry(): void {
-    if (this.unblockTimer || this.unblockAttempts >= 5) return;
-    this.unblockTimer = setTimeout(() => {
-      this.unblockTimer = null;
-      this.unblockAttempts++;
-      this.logger('unblock: retry ' + this.unblockAttempts);
-      void this.shell.goHome();
-    }, 60000);
   }
 
   /** Потоки: «Мой поток» по умолчанию, дальше настроения и жанры с главной сайта. */
@@ -198,37 +184,39 @@ export class PlayerPresenter {
     await this.poll();
   }
 
-  /** Запустить поток и дождаться, пока он реально заиграет. */
+  /**
+   * Запустить поток и дождаться воспроизведения. Без каскада автокликов:
+   * на антибот-странице они только продлевают проверку.
+   */
   async startFlow(title: string): Promise<void> {
+    if (/hcheck|xpvnsulc/.test(this.shell.currentUrl())) {
+      this.logger('flow: check page, skip');
+      return;
+    }
     await this.shell.goHome();
     // «Мой поток» — это кнопка на самой главной, карточку трогать не нужно.
     if (title !== 'Мой поток') {
       const card = await this.bridge.clickFlowCard(title);
       if (!card.ok) return;
-      await new Promise((resolve) => setTimeout(resolve, 2500));
+      await new Promise((resolve) => setTimeout(resolve, 2200));
     }
-    // Кнопку ищем с повторами: после старта сайт иногда уводит на антибот-редирект
-    // (hcheck/oirutpsp), и первый клик уходит в пустоту.
     let clicks = 0;
-    for (let i = 0; i < 12 && clicks === 0; i++) {
-      const res = await this.bridge.clickStartButton();
-      if (res.ok) clicks++;
-      else await new Promise((resolve) => setTimeout(resolve, 1000));
-    }
-    // Поток стартует не мгновенно (очередь треков, токен), поэтому ждём воспроизведения,
-    // а не одного опроса. Повторных кликов не больше трёх — сайт не любит частые.
-    for (let i = 0; i < 24; i++) {
+    for (let i = 0; i < 8; i++) {
+      if (/hcheck|xpvnsulc/.test(this.shell.currentUrl())) {
+        this.logger('flow: check page, stop');
+        return;
+      }
       const state = await this.poll();
       this.logger(`flow: wait ${i} status=${state.status} title=${state.track?.title ?? '-'}`);
       if (state.status === 'playing') {
         this.logger('flow: playing');
         return;
       }
-      if (i % 8 === 7 && clicks < 3) {
+      if (clicks < 2 && (i === 0 || i === 4)) {
         const res = await this.bridge.clickStartButton();
         if (res.ok) clicks++;
       }
-      await new Promise((resolve) => setTimeout(resolve, 2500));
+      await new Promise((resolve) => setTimeout(resolve, 1300));
     }
   }
 

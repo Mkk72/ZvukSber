@@ -38,6 +38,9 @@ b(`module loaded argv=${process.argv.slice(1).join(' ')}`);
 
 const settings: Settings = loadSettings();
 app.commandLine.appendSwitch('autoplay-policy', 'no-user-gesture-required');
+// Не показываем сайту «Electron» в UA: антибот-проверка Звука на этом спотыкается.
+app.userAgentFallback = `Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/${process.versions.chrome} Safari/537.36`;
+app.setAppUserModelId('ru.zvuksber.desktop');
 
 let siteWin: BrowserWindow | null = null;
 let barWin: BrowserWindow | null = null;
@@ -448,8 +451,15 @@ async function bootstrap(): Promise<void> {
   b('presenter started');
 
   // Автозапуск потока: главная уже загружена, поэтому просто ждём отрисовку карточек.
+  // Если Звук уже показывает антибот-проверку — не трогаем страницу: частые
+  // автоклики и перезагрузки только продлевают проверку.
   if (settings.startFlowOnLaunch) {
     setTimeout(() => {
+      const url = siteWin?.webContents.getURL() ?? '';
+      if (/hcheck|xpvnsulc/.test(url)) {
+        b('auto-start skipped: check page');
+        return;
+      }
       b('auto-start flow: ' + settings.defaultFlow);
       void presenter?.startFlow(settings.defaultFlow);
     }, 6000);

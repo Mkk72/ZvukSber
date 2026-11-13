@@ -2,6 +2,18 @@
   box-sizing: border-box;
 }
 
+:root {
+  /* «Зелёная радуга»: салатовый → зелёный → мята → бирюза. */
+  --progress-wave: linear-gradient(
+    90deg,
+    #d8ff4f 0%,
+    #7dff6b 22%,
+    #1ed760 45%,
+    #00e6a8 70%,
+    #00b8d4 100%
+  );
+}
+
 html,
 body {
   margin: 0;
@@ -233,13 +245,14 @@ body {
 }
 
 .progress:hover .fill {
-  background: #3ef07f;
+  filter: brightness(1.14);
+  box-shadow: 0 0 12px rgba(30, 215, 96, 0.65);
 }
 
 .progress .fill {
   height: 100%;
   width: 0;
-  background: #1ed760;
+  background: var(--progress-wave);
   border-radius: 3px;
   transition: width 0.2s linear;
 }
