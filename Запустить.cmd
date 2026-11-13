@@ -1,12 +1,9 @@
 @echo off
-rem ZvukSber: запуск без установщика.
-rem Приоритет — сборка из исходников: она всегда свежая. Готовая сборка в release
-rem используется только если исходников/зависимостей нет. Молчит, когда всё в порядке.
+rem ZvukSber: запуск без установщика. Ничего не собирает — только запускает.
+rem Собрать после правок в коде: Собрать.cmd
 setlocal
 cd /d "%~dp0"
 
-rem Скрипт должен лежать рядом с package.json: копия в другой папке (например,
-rem в release\win-unpacked) ищет node_modules и сборку по неверным путям.
 if not exist "%~dp0package.json" (
   echo.
   echo   Запустите "Запустить.cmd" из корня проекта — там, где лежит package.json.
@@ -17,11 +14,13 @@ if not exist "%~dp0package.json" (
 )
 
 if exist "%~dp0node_modules\electron\dist\electron.exe" (
-  where node >nul 2>nul
-  if not errorlevel 1 (
-    call npx tsc -p tsconfig.json >nul 2>nul
+  if not exist "%~dp0dist\main\index.js" (
+    echo   Первый запуск: собираю...
+    call npm run build
     if errorlevel 1 (
-      echo   Сборка TypeScript не удалась. Запустите вручную: npm run build
+      echo.
+      echo   Сборка не удалась. Подробности — в выводе выше.
+      echo.
       pause
       exit /b 1
     )
