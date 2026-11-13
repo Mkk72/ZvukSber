@@ -34,12 +34,12 @@ body {
 
 .bar {
   position: relative;
-  flex: 0 0 44px;
-  height: 44px;
+  flex: 0 0 48px;
+  height: 48px;
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 0 8px 13px;
+  padding: 5px 8px 13px;
   -webkit-app-region: drag;
 }
 
