@@ -61,7 +61,7 @@ export function buildTrayMenu(state: PlayerState, options: TrayMenuOptions): Men
   });
   items.push({
     id: 'layout',
-    label: options.layout === 'wide' ? 'Вид: полоса 35 px' : 'Вид: широкая плашка',
+    label: options.layout === 'wide' ? 'Вид: компактная полоса' : 'Вид: широкая плашка',
     enabled: true,
     type: 'normal'
   });

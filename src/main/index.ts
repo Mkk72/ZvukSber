@@ -15,7 +15,7 @@ const PRELOAD_FILE = path.join(__dirname, '..', 'preload', 'bar.js');
 const TRAY_ICON = path.join(APP_DIR, 'app', 'tray-32.png');
 const APP_ICON = path.join(APP_DIR, 'app', 'icon-256.png');
 const SITE_URL = 'https://zvuk.com/';
-const BAR_HEIGHT = 35;
+const BAR_HEIGHT = 44;
 const WIDE_HEIGHT = 110;
 
 // Диагностический лог: файл, потому что stdout GUI-процесса на Windows теряется.

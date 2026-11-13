@@ -22,12 +22,12 @@ body {
 
 .bar {
   position: relative;
-  flex: 0 0 35px;
-  height: 35px;
+  flex: 0 0 44px;
+  height: 44px;
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 0 8px;
+  padding: 0 8px 13px;
   -webkit-app-region: drag;
 }
 
@@ -220,13 +220,14 @@ body {
 
 .progress {
   position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  height: 5px;
-  padding-top: 3px;
+  left: 8px;
+  right: 8px;
+  bottom: 5px;
+  height: 6px;
+  padding: 0;
+  border-radius: 3px;
+  overflow: hidden;
   background: #23252b;
-  background-clip: content-box;
   -webkit-app-region: no-drag;
   cursor: pointer;
 }
@@ -236,9 +237,10 @@ body {
 }
 
 .progress .fill {
-  height: 2px;
+  height: 100%;
   width: 0;
   background: #1ed760;
+  border-radius: 3px;
   transition: width 0.2s linear;
 }
 
@@ -283,8 +285,8 @@ body.wide .bar {
   height: 110px;
   flex-wrap: wrap;
   align-content: center;
-  padding: 8px 10px 10px;
-  gap: 4px 8px;
+  padding: 3px 10px 11px;
+  gap: 3px 8px;
 }
 
 body.wide .cover {
@@ -311,5 +313,14 @@ body.wide .hint {
 }
 
 body.wide .progress {
-  height: 3px;
+  left: 10px;
+  right: 10px;
+  bottom: 5px;
+  height: 9px;
+  border-radius: 5px;
+}
+
+body.wide .progress .fill {
+  height: 100%;
+  border-radius: 5px;
 }
