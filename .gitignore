@@ -1,0 +1,8 @@
+node_modules/
+dist/
+release/
+_spike/
+_diag/
+*.log
+Thumbs.db
+desktop.ini

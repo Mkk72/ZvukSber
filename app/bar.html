@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' https: data:; style-src 'self'" />
+    <title>ZvukSber</title>
+    <link rel="stylesheet" href="bar.css" />
+  </head>
+  <body>
+    <div class="menu" id="menu" hidden>
+      <div class="menu-list" id="menu-list"></div>
+    </div>
+
+    <div class="bar" id="bar">
+      <div class="cover" id="cover"><img id="cover-img" alt="" /></div>
+
+      <div class="meta">
+        <div class="title" id="title" title="">Звук</div>
+        <div class="artist" id="artist"></div>
+      </div>
+
+      <div class="controls">
+        <button class="btn" data-cmd="dislike" title="Не нравится" aria-label="Не нравится">&#8856;</button>
+        <button class="btn" data-cmd="prev" title="Предыдущий трек (Ctrl+Alt+←)" aria-label="Предыдущий трек">&#9198;</button>
+        <button class="btn play" data-cmd="toggle" id="toggle" title="Воспроизвести" aria-label="Воспроизвести">&#9205;</button>
+        <button class="btn" data-cmd="next" title="Следующий трек (Ctrl+Alt+→)" aria-label="Следующий трек">&#9197;</button>
+        <button class="btn like" data-cmd="like" title="Нравится (Ctrl+Alt+L)" aria-label="Нравится">&#9825;</button>
+        <button class="btn menu-btn" data-menu="1" title="Меню" aria-label="Меню">&#9776;</button>
+      </div>
+
+      <div class="time"><span id="pos">0:00</span><span class="slash">/</span><span id="dur">0:00</span></div>
+
+      <div class="secondary">
+        <button class="btn small" data-cmd="shuffle" title="Перемешать" aria-label="Перемешать">&#8644;</button>
+        <button class="btn small" data-cmd="repeat" title="Повтор" aria-label="Повтор">&#8635;</button>
+        <button class="btn small" data-cmd="queue" title="Очередь" aria-label="Очередь">&#9776;</button>
+        <span class="hint">ZvukSber</span>
+      </div>
+
+      <div class="progress" id="progress"><div class="fill" id="fill"></div></div>
+    </div>
+
+    <script src="bar.js"></script>
+  </body>
+</html>
