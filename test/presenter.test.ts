@@ -57,6 +57,7 @@ function makeHarness(raw: RawSnapshot | null = snapshot()) {
       alwaysOnTop: () => alwaysOnTop,
       autostart: () => autostart,
       startFlowOnLaunch: () => false,
+      currentUrl: () => 'https://zvuk.com/',
       toggleWindow: () => {
         visible = !visible;
       },

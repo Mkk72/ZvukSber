@@ -251,6 +251,7 @@ const shellActions: IShellActions = {
   alwaysOnTop: () => !!barWin && barWin.isAlwaysOnTop(),
   autostart: () => !!settings.autostart,
   startFlowOnLaunch: () => !!settings.startFlowOnLaunch,
+  currentUrl: () => siteWin?.webContents.getURL() ?? '',
   toggleWindow: () => {
     if (!siteWin) return;
     if (siteWin.isVisible()) {
@@ -391,9 +392,10 @@ async function bootstrap(): Promise<void> {
       },
       setTooltip: (text) => tray?.setToolTip(text ? 'ZvukSber — ' + text : 'ZvukSber')
     },
-    shellActions
+    shellActions,
+    500,
+    b
   );
-
   ipcMain.on('bar:command', (_event, command: string) => {
     if (command.startsWith('seek:')) {
       void presenter?.seekRatio(Number(command.slice(5)));

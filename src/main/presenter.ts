@@ -26,6 +26,8 @@ export interface IShellActions {
   alwaysOnTop(): boolean;
   autostart(): boolean;
   startFlowOnLaunch(): boolean;
+  /** Текущий адрес страницы: по нему видно антибот-заглушку. */
+  currentUrl(): string;
   toggleWindow(): void;
   setLayout(layout: BarLayout): void;
   setAlwaysOnTop(value: boolean): void;
@@ -63,7 +65,8 @@ export class PlayerPresenter {
     private readonly bar: IBarView,
     private readonly tray: ITrayView,
     private readonly shell: IShellActions,
-    private readonly pollMs = 500
+    private readonly pollMs = 500,
+    private readonly logger: (message: string) => void = () => {}
   ) {}
 
   getState(): PlayerState {
@@ -83,6 +86,21 @@ export class PlayerPresenter {
 
   /** Один цикл опроса. Публичный, чтобы можно было дёрнуть из теста/диагностики. */
   async poll(): Promise<PlayerState> {
+    // Антибот-заглушка Звука: страница hcheck/xpvnsulc без плеера. Показываем
+    // честный текст вместо «ничего не играет» и пробуем вернуться сами, но редко.
+    if (/hcheck|xpvnsulc/.test(this.shell.currentUrl())) {
+      const idle = toBarViewModel(EMPTY_STATE);
+      this.bar.setState({
+        ...idle,
+        title: 'Звук',
+        artist: 'проверка сайта — подождите',
+        canToggle: false,
+        canNext: false,
+        canPrev: false
+      });
+      this.scheduleUnblockRetry();
+      return EMPTY_STATE;
+    }
     const raw = await this.bridge.snapshot();
     const next = stateFromSnapshot(raw);
     const sig = signature(next);
@@ -123,6 +141,19 @@ export class PlayerPresenter {
     if (first.clicked) return;
     await new Promise((resolve) => setTimeout(resolve, 400));
     await this.bridge.click(action);
+  }
+
+  private unblockTimer: NodeJS.Timeout | null = null;
+  private unblockAttempts = 0;
+
+  private scheduleUnblockRetry(): void {
+    if (this.unblockTimer || this.unblockAttempts >= 5) return;
+    this.unblockTimer = setTimeout(() => {
+      this.unblockTimer = null;
+      this.unblockAttempts++;
+      this.logger('unblock: retry ' + this.unblockAttempts);
+      void this.shell.goHome();
+    }, 60000);
   }
 
   /** Потоки: «Мой поток» по умолчанию, дальше настроения и жанры с главной сайта. */
@@ -188,7 +219,11 @@ export class PlayerPresenter {
     // а не одного опроса. Повторных кликов не больше трёх — сайт не любит частые.
     for (let i = 0; i < 24; i++) {
       const state = await this.poll();
-      if (state.status === 'playing') return;
+      this.logger(`flow: wait ${i} status=${state.status} title=${state.track?.title ?? '-'}`);
+      if (state.status === 'playing') {
+        this.logger('flow: playing');
+        return;
+      }
       if (i % 8 === 7 && clicks < 3) {
         const res = await this.bridge.clickStartButton();
         if (res.ok) clicks++;

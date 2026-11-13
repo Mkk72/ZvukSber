@@ -249,7 +249,7 @@ export class SiteBridge {
   /** Кнопка «Запустить поток» / «Слушать» на странице потока. */
   async clickStartButton(): Promise<{ ok: boolean; label?: string }> {
     try {
-      return (await this.wc.executeJavaScript(
+      const result = (await this.wc.executeJavaScript(
         `(() => {
           const btns = Array.from(document.querySelectorAll('button'));
           const re = /(запустить поток|слушать|включить|воспроизвести)/i;
@@ -260,7 +260,10 @@ export class SiteBridge {
         })()`,
         true
       )) as { ok: boolean; label?: string };
+      this.logger('flow: clickStartButton ' + JSON.stringify(result));
+      return result;
     } catch (e) {
+      this.logger('flow: clickStartButton failed ' + String(e));
       return { ok: false, label: String(e) };
     }
   }
