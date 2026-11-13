@@ -5,6 +5,17 @@ rem используется только если исходников/зави
 setlocal
 cd /d "%~dp0"
 
+rem Скрипт должен лежать рядом с package.json: копия в другой папке (например,
+rem в release\win-unpacked) ищет node_modules и сборку по неверным путям.
+if not exist "%~dp0package.json" (
+  echo.
+  echo   Запустите "Запустить.cmd" из корня проекта — там, где лежит package.json.
+  echo   Текущая папка: %~dp0
+  echo.
+  pause
+  exit /b 1
+)
+
 if exist "%~dp0node_modules\electron\dist\electron.exe" (
   where node >nul 2>nul
   if not errorlevel 1 (
