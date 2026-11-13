@@ -167,7 +167,7 @@ export class PlayerPresenter {
     await this.poll();
   }
 
-  /** Запустить поток: главная → карточка потока → «Запустить поток». */
+  /** Запустить поток и дождаться, пока он реально заиграет. */
   async startFlow(title: string): Promise<void> {
     await this.shell.goHome();
     // «Мой поток» — это кнопка на самой главной, карточку трогать не нужно.
@@ -177,14 +177,24 @@ export class PlayerPresenter {
       await new Promise((resolve) => setTimeout(resolve, 2500));
     }
     // Кнопку ищем с повторами: после старта сайт иногда уводит на антибот-редирект
-    // (hcheck/oirutpsp) и возвращает на главную, тогда первый клик уходит в пустоту.
-    for (let i = 0; i < 12; i++) {
+    // (hcheck/oirutpsp), и первый клик уходит в пустоту.
+    let clicks = 0;
+    for (let i = 0; i < 12 && clicks === 0; i++) {
       const res = await this.bridge.clickStartButton();
-      if (res.ok) break;
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      if (res.ok) clicks++;
+      else await new Promise((resolve) => setTimeout(resolve, 1000));
     }
-    await new Promise((resolve) => setTimeout(resolve, 1500));
-    await this.poll();
+    // Поток стартует не мгновенно (очередь треков, токен), поэтому ждём воспроизведения,
+    // а не одного опроса. Повторных кликов не больше трёх — сайт не любит частые.
+    for (let i = 0; i < 24; i++) {
+      const state = await this.poll();
+      if (state.status === 'playing') return;
+      if (i % 8 === 7 && clicks < 3) {
+        const res = await this.bridge.clickStartButton();
+        if (res.ok) clicks++;
+      }
+      await new Promise((resolve) => setTimeout(resolve, 2500));
+    }
   }
 
   /** Единая точка исполнения команд из трея, мини-плеера и горячих клавиш. */
