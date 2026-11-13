@@ -170,6 +170,66 @@ export class SiteBridge {
     }
   }
 
+  /** Список потоков, которые сайт показывает на главной: «Мой поток», настроения, жанры. */
+  async listFlows(): Promise<string[]> {
+    try {
+      const titles = (await this.wc.executeJavaScript(
+        `(() => {
+          const cards = Array.from(document.querySelectorAll('[class*="ContentListItem_root"], [class*="RecentListening_card"]'));
+          const out = [];
+          for (const card of cards) {
+            const first = (card.innerText || '').split('\\n')[0].trim();
+            if (first && !out.includes(first)) out.push(first);
+            if (out.length >= 16) break;
+          }
+          return out;
+        })()`,
+        true
+      )) as string[];
+      return Array.isArray(titles) ? titles : [];
+    } catch {
+      return [];
+    }
+  }
+
+  /** Клик по карточке потока на главной (карточки — div'ы без ссылок). */
+  async clickFlowCard(title: string): Promise<{ ok: boolean; reason?: string }> {
+    try {
+      return (await this.wc.executeJavaScript(
+        `(() => {
+          const title = ${JSON.stringify(title)};
+          const cards = Array.from(document.querySelectorAll('[class*="ContentListItem_root"], [class*="RecentListening_card"]'));
+          const card = cards.find(c => ((c.innerText || '').split('\\n')[0].trim()) === title);
+          if (!card) return { ok: false, reason: 'no-card' };
+          card.click();
+          return { ok: true };
+        })()`,
+        true
+      )) as { ok: boolean; reason?: string };
+    } catch (e) {
+      return { ok: false, reason: String(e) };
+    }
+  }
+
+  /** Кнопка «Запустить поток» / «Слушать» на странице потока. */
+  async clickStartButton(): Promise<{ ok: boolean; label?: string }> {
+    try {
+      return (await this.wc.executeJavaScript(
+        `(() => {
+          const btns = Array.from(document.querySelectorAll('button'));
+          const re = /(запустить поток|слушать|включить|воспроизвести)/i;
+          const hit = btns.find(b => re.test((b.innerText || '').trim()) && !/бесплатно/i.test(b.innerText || ''));
+          if (!hit) return { ok: false };
+          hit.click();
+          return { ok: true, label: (hit.innerText || '').trim().slice(0, 30) };
+        })()`,
+        true
+      )) as { ok: boolean; label?: string };
+    } catch (e) {
+      return { ok: false, label: String(e) };
+    }
+  }
+
   /** Клик по кнопке сайта, когда mediaSession действия не предусматривает (лайк, повтор…). */
   async click(action: DomAction): Promise<{ clicked: boolean; how?: string; reason?: string; label?: string }> {
     try {

@@ -29,6 +29,8 @@ export interface IShellActions {
   setLayout(layout: BarLayout): void;
   setAlwaysOnTop(value: boolean): void;
   setAutostart(value: boolean): void;
+  /** Перейти на главную сайта и дождаться загрузки. */
+  goHome(): Promise<void>;
   quit(): void;
 }
 
@@ -118,6 +120,38 @@ export class PlayerPresenter {
     if (first.clicked) return;
     await new Promise((resolve) => setTimeout(resolve, 400));
     await this.bridge.click(action);
+  }
+
+  /** Потоки: «Мой поток» по умолчанию, дальше настроения и жанры с главной сайта. */
+  private flows: string[] = ['Мой поток', 'Утро', 'Спорт', 'Медитация', 'Поп', 'Хип-хоп', 'Рок', 'Веселое', 'Легкая'];
+
+  async refreshFlows(): Promise<string[]> {
+    const discovered = await this.bridge.listFlows();
+    if (discovered.length > 0) this.flows = discovered;
+    return this.flows;
+  }
+
+  flowMenuItems(): MenuItemModel[] {
+    const items: MenuItemModel[] = this.flows.map((title) => ({
+      id: 'flow:' + title,
+      label: title,
+      enabled: true,
+      type: 'normal'
+    }));
+    items.push({ id: 'sep-flows', label: '', enabled: false, type: 'separator' });
+    items.push({ id: 'menu-back', label: '← Назад', enabled: true, type: 'normal' });
+    return items;
+  }
+
+  /** Запустить поток: главная → карточка потока → «Запустить поток». */
+  async startFlow(title: string): Promise<void> {
+    await this.shell.goHome();
+    const card = await this.bridge.clickFlowCard(title);
+    if (!card.ok) return;
+    await new Promise((resolve) => setTimeout(resolve, 2500));
+    await this.bridge.clickStartButton();
+    await new Promise((resolve) => setTimeout(resolve, 1500));
+    await this.poll();
   }
 
   /** Единая точка исполнения команд из трея, мини-плеера и горячих клавиш. */

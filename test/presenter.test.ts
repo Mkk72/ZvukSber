@@ -68,6 +68,9 @@ function makeHarness(raw: RawSnapshot | null = snapshot()) {
       setAutostart: (value) => {
         autostart = value;
       },
+      goHome: async () => {
+        /* в тесте навигация не нужна */
+      },
       quit: () => {
         quit = true;
       }

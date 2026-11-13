@@ -42,6 +42,7 @@ let presenter: PlayerPresenter | null = null;
 let quitting = false;
 let currentLayout: BarLayout = settings.layout;
 let menuOpen = false;
+let menuPage: 'main' | 'flows' = 'main';
 
 const MENU_ROW_HEIGHT = 26;
 const MENU_SEP_HEIGHT = 9;
@@ -167,7 +168,17 @@ function menuItemToTemplate(item: MenuItemModel): Electron.MenuItemConstructorOp
  */
 function openBarMenu(): void {
   if (!barWin || !presenter || menuOpen) return;
-  const items = presenter.menuItems();
+  const items =
+    menuPage === 'flows'
+      ? presenter.flowMenuItems()
+      : (() => {
+          const main = presenter.menuItems();
+          const sepIndex = main.findIndex((item) => item.id === 'sep-3');
+          const flowItem: MenuItemModel = { id: 'flows', label: 'Поток ▸', enabled: true, type: 'normal' };
+          if (sepIndex >= 0) main.splice(sepIndex, 0, flowItem);
+          else main.push(flowItem);
+          return main;
+        })();
   const all: MenuItemModel[] = [
     ...items,
     { id: 'sep-extra', label: '', enabled: false, type: 'separator' },
@@ -198,6 +209,7 @@ function closeBarMenu(): void {
   const bottom = bounds.y + bounds.height;
   barWin.setBounds({ x: bounds.x, y: bottom - base, width: bounds.width, height: base });
   barWin.webContents.send('bar:menu', { open: false, items: [] });
+  menuPage = 'main';
 }
 
 async function onMenuItem(id: string): Promise<void> {
@@ -210,6 +222,22 @@ async function onMenuItem(id: string): Promise<void> {
     return;
   }
   if (!presenter) return;
+  if (id === 'flows') {
+    await presenter.refreshFlows();
+    menuPage = 'flows';
+    openBarMenu();
+    return;
+  }
+  if (id === 'menu-back') {
+    menuPage = 'main';
+    openBarMenu();
+    return;
+  }
+  if (id.startsWith('flow:')) {
+    menuPage = 'main';
+    await presenter.startFlow(id.slice('flow:'.length));
+    return;
+  }
   if (id === 'always-on-top') return presenter.toggleAlwaysOnTop();
   if (id === 'autostart') return presenter.toggleAutostart();
   if (id === 'layout') return presenter.toggleLayout();
@@ -254,6 +282,13 @@ const shellActions: IShellActions = {
     } catch (e) {
       log('setLoginItemSettings failed: ' + String(e));
     }
+  },
+  goHome: async () => {
+    if (!siteWin) return;
+    const url = siteWin.webContents.getURL();
+    if (url.startsWith('https://zvuk.com/') && new URL(url).pathname === '/') return;
+    await siteWin.loadURL('https://zvuk.com/');
+    await new Promise((resolve) => setTimeout(resolve, 2500));
   },
   quit: () => {
     quitting = true;
@@ -422,6 +457,18 @@ async function bootstrap(): Promise<void> {
         if (command === 'layout') {
           b('command layout');
           presenter?.toggleLayout();
+          continue;
+        }
+        if (command === 'flows') {
+          b('command flows');
+          menuPage = 'flows';
+          void presenter?.refreshFlows().then(() => openBarMenu());
+          continue;
+        }
+        if (command.startsWith('flow:')) {
+          const title = command.slice('flow:'.length);
+          b('command flow: ' + title);
+          void presenter?.startFlow(title);
           continue;
         }
         void presenter?.run(command as PlayerCommand);
