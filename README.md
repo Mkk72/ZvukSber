@@ -123,3 +123,19 @@ test/        — тесты ядра и презентера (фейковые �
 3. синтетические клавиши.
 
 Прогресс и метаданные берутся из состояния плеера сайта, а не из своего таймера.
+## Лицензия / License
+
+**MIT.** Свободное использование, копирование, изменение, объединение, публикация,
+распространение, сублицензирование и продажа — при сохранении уведомления об
+авторских правах и текста лицензии.
+
+- Основной разработчик / Main developer: **Mamberger Konstantin**
+- Кодер / Coder: **DeepSeek Harness**
+
+Полный текст: [LICENSE](LICENSE) (English, юридически значимая версия) и
+[LICENSE.ru.md](LICENSE.ru.md) (русский перевод). Авторы — [CREDITS.md](CREDITS.md).
+
+**MIT** permits free use, copy, modification, publication, distribution,
+sublicensing and sale, provided the copyright notice and permission notice are
+retained. Main developer: **Mamberger Konstantin**. Code authored with
+**DeepSeek Harness**.
