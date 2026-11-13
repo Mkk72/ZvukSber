@@ -91,11 +91,16 @@ function createSiteWindow(): BrowserWindow {
   });
   win.removeMenu();
   win.on('close', (event) => {
-    if (!quitting && settings.closeToTray) {
+    if (quitting) return;
+    // По умолчанию закрытие окна = выход, иначе в диспетчере задач остаётся висеть Electron.
+    if (settings.closeToTray) {
       event.preventDefault();
       win.hide();
       presenter?.renderTrayMenu(true);
+      return;
     }
+    quitting = true;
+    app.quit();
   });
   return win;
 }
@@ -137,6 +142,12 @@ function createBarWindow(): BrowserWindow {
 
   bar.on('closed', () => {
     barWin = null;
+  });
+  bar.on('close', () => {
+    if (!quitting) {
+      quitting = true;
+      app.quit();
+    }
   });
 
   void bar.loadFile(BAR_FILE);

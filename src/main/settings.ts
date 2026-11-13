@@ -30,7 +30,7 @@ export const DEFAULT_SETTINGS: Settings = {
   layout: 'bar',
   barWidth: 520,
   wideWidth: 420,
-  closeToTray: true,
+  closeToTray: false,
   mediaKeys: true,
   startHidden: false,
   autostart: false,
