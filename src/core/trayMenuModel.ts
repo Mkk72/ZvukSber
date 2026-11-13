@@ -15,6 +15,7 @@ export interface TrayMenuOptions {
   alwaysOnTop?: boolean;
   layout?: 'bar' | 'wide';
   autostart?: boolean;
+  startFlowOnLaunch?: boolean;
 }
 
 /**
@@ -70,6 +71,13 @@ export function buildTrayMenu(state: PlayerState, options: TrayMenuOptions): Men
     enabled: true,
     type: 'normal',
     checked: !!options.autostart
+  });
+  items.push({
+    id: 'start-flow',
+    label: 'Запускать «Мой поток» при старте',
+    enabled: true,
+    type: 'normal',
+    checked: !!options.startFlowOnLaunch
   });
   items.push({ id: 'sep-4', label: '', enabled: false, type: 'separator' });
   add('quit', 'Выход');

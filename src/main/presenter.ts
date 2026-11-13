@@ -25,10 +25,12 @@ export interface IShellActions {
   layout(): BarLayout;
   alwaysOnTop(): boolean;
   autostart(): boolean;
+  startFlowOnLaunch(): boolean;
   toggleWindow(): void;
   setLayout(layout: BarLayout): void;
   setAlwaysOnTop(value: boolean): void;
   setAutostart(value: boolean): void;
+  setStartFlowOnLaunch(value: boolean): void;
   /** Перейти на главную сайта и дождаться загрузки. */
   goHome(): Promise<void>;
   quit(): void;
@@ -102,7 +104,8 @@ export class PlayerPresenter {
       windowVisible: this.shell.windowVisible(),
       alwaysOnTop: this.shell.alwaysOnTop(),
       layout: this.shell.layout(),
-      autostart: this.shell.autostart()
+      autostart: this.shell.autostart(),
+      startFlowOnLaunch: this.shell.startFlowOnLaunch()
     });
   }
 
@@ -146,10 +149,19 @@ export class PlayerPresenter {
   /** Запустить поток: главная → карточка потока → «Запустить поток». */
   async startFlow(title: string): Promise<void> {
     await this.shell.goHome();
-    const card = await this.bridge.clickFlowCard(title);
-    if (!card.ok) return;
-    await new Promise((resolve) => setTimeout(resolve, 2500));
-    await this.bridge.clickStartButton();
+    // «Мой поток» — это кнопка на самой главной, карточку трогать не нужно.
+    if (title !== 'Мой поток') {
+      const card = await this.bridge.clickFlowCard(title);
+      if (!card.ok) return;
+      await new Promise((resolve) => setTimeout(resolve, 2500));
+    }
+    // Кнопку ищем с повторами: после старта сайт иногда уводит на антибот-редирект
+    // (hcheck/oirutpsp) и возвращает на главную, тогда первый клик уходит в пустоту.
+    for (let i = 0; i < 12; i++) {
+      const res = await this.bridge.clickStartButton();
+      if (res.ok) break;
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+    }
     await new Promise((resolve) => setTimeout(resolve, 1500));
     await this.poll();
   }
@@ -218,6 +230,11 @@ export class PlayerPresenter {
 
   toggleAutostart(): void {
     this.shell.setAutostart(!this.shell.autostart());
+    this.renderTrayMenu(true);
+  }
+
+  toggleStartFlowOnLaunch(): void {
+    this.shell.setStartFlowOnLaunch(!this.shell.startFlowOnLaunch());
     this.renderTrayMenu(true);
   }
 }

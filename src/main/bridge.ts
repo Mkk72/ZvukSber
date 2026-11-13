@@ -170,6 +170,15 @@ export class SiteBridge {
     }
   }
 
+  /** Текущий адрес страницы (нужен, чтобы дождаться конца антибот-редиректа). */
+  async url(): Promise<string> {
+    try {
+      return (await this.wc.executeJavaScript('location.href', true)) as string;
+    } catch {
+      return '';
+    }
+  }
+
   /** Список потоков, которые сайт показывает на главной: «Мой поток», настроения, жанры. */
   async listFlows(): Promise<string[]> {
     try {

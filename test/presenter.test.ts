@@ -56,6 +56,7 @@ function makeHarness(raw: RawSnapshot | null = snapshot()) {
       layout: () => layout,
       alwaysOnTop: () => alwaysOnTop,
       autostart: () => autostart,
+      startFlowOnLaunch: () => false,
       toggleWindow: () => {
         visible = !visible;
       },
@@ -67,6 +68,9 @@ function makeHarness(raw: RawSnapshot | null = snapshot()) {
       },
       setAutostart: (value) => {
         autostart = value;
+      },
+      setStartFlowOnLaunch: () => {
+        /* в тесте флаг не нужен */
       },
       goHome: async () => {
         /* в тесте навигация не нужна */

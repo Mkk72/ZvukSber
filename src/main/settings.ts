@@ -17,6 +17,10 @@ export interface Settings {
   startHidden: boolean;
   /** Запускать вместе с Windows (ярлык в автозагрузке). */
   autostart: boolean;
+  /** Сразу включать поток при запуске приложения. */
+  startFlowOnLaunch: boolean;
+  /** Какой поток запускать: название карточки с главной сайта. */
+  defaultFlow: string;
 }
 
 export const DEFAULT_SETTINGS: Settings = {
@@ -29,7 +33,9 @@ export const DEFAULT_SETTINGS: Settings = {
   closeToTray: true,
   mediaKeys: true,
   startHidden: false,
-  autostart: false
+  autostart: false,
+  startFlowOnLaunch: true,
+  defaultFlow: 'Мой поток'
 };
 
 /** Файл настроек рядом с профилем приложения. Чистый fs — можно читать до app.ready. */

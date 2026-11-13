@@ -240,6 +240,7 @@ async function onMenuItem(id: string): Promise<void> {
   }
   if (id === 'always-on-top') return presenter.toggleAlwaysOnTop();
   if (id === 'autostart') return presenter.toggleAutostart();
+  if (id === 'start-flow') return presenter.toggleStartFlowOnLaunch();
   if (id === 'layout') return presenter.toggleLayout();
   await presenter.run(id as PlayerCommand);
 }
@@ -249,6 +250,7 @@ const shellActions: IShellActions = {
   layout: () => currentLayout,
   alwaysOnTop: () => !!barWin && barWin.isAlwaysOnTop(),
   autostart: () => !!settings.autostart,
+  startFlowOnLaunch: () => !!settings.startFlowOnLaunch,
   toggleWindow: () => {
     if (!siteWin) return;
     if (siteWin.isVisible()) {
@@ -282,6 +284,10 @@ const shellActions: IShellActions = {
     } catch (e) {
       log('setLoginItemSettings failed: ' + String(e));
     }
+  },
+  setStartFlowOnLaunch: (value: boolean) => {
+    settings.startFlowOnLaunch = value;
+    saveSettings(settings);
   },
   goHome: async () => {
     if (!siteWin) return;
@@ -349,24 +355,21 @@ async function bootstrap(): Promise<void> {
   registerShortcuts();
   b('shortcuts registered');
 
-  await siteWin.loadURL(SITE_URL);
-  b('site loaded');
-  await probeInjection(siteWin);
-
-  // CDP отвечает только когда у окна уже есть документ: ставим перехватчик после
-  // первой загрузки и один раз перезагружаем, чтобы он попал до скриптов сайта.
+  // Одна настоящая навигация вместо двух: грузим about:blank, ставим инъекцию,
+  // потом сразу сайт. Лишняя перезагрузка раздражала антибот-защиту Звука.
+  await siteWin.loadURL('about:blank');
+  b('blank loaded');
   try {
     await bridge.attach();
     b('bridge attached');
-    siteWin.webContents.reload();
-    await new Promise<void>((resolve) => siteWin?.webContents.once('did-finish-load', () => resolve()));
-    await new Promise((resolve) => setTimeout(resolve, 3000));
-    b('reloaded with bridge');
-    await probeInjection(siteWin);
   } catch (e) {
     b('bridge attach failed: ' + String(e));
     log('bridge attach failed: ' + String(e));
   }
+
+  await siteWin.loadURL(SITE_URL);
+  b('site loaded');
+  await probeInjection(siteWin);
 
   barWin = createBarWindow();
   b('bar window created');
@@ -410,6 +413,14 @@ async function bootstrap(): Promise<void> {
   presenter.renderTrayMenu(true);
   presenter.start();
   b('presenter started');
+
+  // Автозапуск потока: главная уже загружена, поэтому просто ждём отрисовку карточек.
+  if (settings.startFlowOnLaunch) {
+    setTimeout(() => {
+      b('auto-start flow: ' + settings.defaultFlow);
+      void presenter?.startFlow(settings.defaultFlow);
+    }, 6000);
+  }
 
   // Диагностика и канал команд для отладки без DevTools:
   // пишем состояние в _diag/state.json, читаем команды из _diag/command.txt.
